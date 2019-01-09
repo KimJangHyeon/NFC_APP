@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.nfc.tech.NfcA;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -16,14 +15,16 @@ public class MainActivity extends AppCompatActivity {
     private NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
     private static String tagNum = null;
-    private TextView tagDesc;
+    private TextView tagDesc1;
+    private TextView tagDesc2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tagDesc = (TextView) findViewById(R.id.tagDesc);
+        tagDesc1 = (TextView) findViewById(R.id.tagDesc1);
+        tagDesc2 = (TextView) findViewById(R.id.tagDesc2);
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
@@ -52,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         if (tag != null) {
             byte[] tagId = tag.getId();
-            tagDesc.setText("TagId: " + toHexString(tagId));
+            tagDesc1.setText("TagId: " + toHexString(tagId));
+            tagDesc2.setText("TagId: " + tagId);
             tagNum = toHexString(tagId);
         }
     }
