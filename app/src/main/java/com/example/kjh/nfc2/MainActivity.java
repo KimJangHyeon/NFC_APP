@@ -7,7 +7,11 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
+import android.nfc.tech.MifareClassic;
 import android.nfc.tech.MifareUltralight;
+import android.nfc.tech.NfcA;
+import android.os.IBinder;
+import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -74,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
             if (rawMessages != null) {
                 NdefMessage[] messages = new NdefMessage[rawMessages.length];
                 for (int i = 0; i < rawMessages.length; i++) {
-                    messages[i] = (NdefMessage) rawMessages[i];
                     msg = "" + messages[i].toString();
                 }
                 // Process the messages array.
@@ -84,22 +87,109 @@ public class MainActivity extends AppCompatActivity {
         if (mTag != null) {
             byte[] tagId = mTag.getId();
             tagDesc1.setText("TagId: " + toHexString(tagId));
-            tagNum = toHexString(tagId);
+            tagNum = toHexString(tagId);    //https://stackoverflow.com/questions/42963329/attempt-to-invoke-virtual-method-void-android-nfc-tech-mifareclassic-connect 이 이유로 patchTag추가
         }
         if (mTag != null) {
-            //String content = readTag(mTag);
+            Log.e("BEFORE PATCHTAG", mTag.toString());
+            mTag = patchTag(mTag);
+            Log.e("PATCHTAG", mTag.toString());
+            String content = readTag(mTag);
 
-            tagDesc2.setText("Tag Content: " + msg);
-
+            tagDesc2.setText("Tag Content: " + content);
         }
 
 
 
     }
 
+    public Tag patchTag(Tag oTag)
+    {
+        if (oTag == null)
+            return null;
+
+        String[] sTechList = oTag.getTechList();
+
+        Parcel oParcel, nParcel;
+
+        oParcel = Parcel.obtain();
+        oTag.writeToParcel(oParcel, 0);
+        oParcel.setDataPosition(0);
+
+        int len = oParcel.readInt();
+        byte[] id = null;
+        if (len >= 0)
+        {
+            id = new byte[len];
+            oParcel.readByteArray(id);
+        }
+        int[] oTechList = new int[oParcel.readInt()];
+        oParcel.readIntArray(oTechList);
+        Bundle[] oTechExtras = oParcel.createTypedArray(Bundle.CREATOR);
+        int serviceHandle = oParcel.readInt();
+        int isMock = oParcel.readInt();
+        IBinder tagService;
+        if (isMock == 0)
+        {
+            tagService = oParcel.readStrongBinder();
+        }
+        else
+        {
+            tagService = null;
+        }
+        oParcel.recycle();
+
+        int nfca_idx=-1;
+        int mc_idx=-1;
+
+        for(int idx = 0; idx < sTechList.length; idx++)
+        {
+            if(sTechList[idx] == NfcA.class.getName())
+            {
+                Log.e("NFCA", "nfca.class getName enter");
+                nfca_idx = idx;
+            }
+            else if(sTechList[idx] == MifareClassic.class.getName())
+            {
+                Log.e("ELIF NFCA", "MifareClassic.class.getName enter");
+                mc_idx = idx;
+            }
+        }
+
+        if(nfca_idx>=0&&mc_idx>=0&&oTechExtras[mc_idx]==null)
+        {
+            Log.e("oTECHEXTRAS", "enter");
+            oTechExtras[mc_idx] = oTechExtras[nfca_idx];
+        }
+        else
+        {
+            Log.e("oTECHEXTRAS ELSE", "enter");
+            return oTag;
+        }
+
+        nParcel = Parcel.obtain();
+        nParcel.writeInt(id.length);
+        nParcel.writeByteArray(id);
+        nParcel.writeInt(oTechList.length);
+        nParcel.writeIntArray(oTechList);
+        nParcel.writeTypedArray(oTechExtras,0);
+        nParcel.writeInt(serviceHandle);
+        nParcel.writeInt(isMock);
+        if(isMock==0)
+        {
+            nParcel.writeStrongBinder(tagService);
+        }
+        nParcel.setDataPosition(0);
+
+        Tag nTag = Tag.CREATOR.createFromParcel(nParcel);
+
+        nParcel.recycle();
+        Log.e("PATCH LAST RET", "ret");
+        return nTag;
+    }
     public String readTag(Tag tag) {
 
         MifareUltralight mifare = MifareUltralight.get(tag);
+        Log.e("MIFARE", mifare.toString());
         try {
             mifare.connect();
             byte[] payload = mifare.readPages(4);
