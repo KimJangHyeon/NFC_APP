@@ -1,4 +1,4 @@
-package com.example.kjh.nfc2;
+package com.example.kjh.nfc2.Enum;
 
 public enum TagTypeEnum {
 

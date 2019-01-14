@@ -50,6 +50,16 @@ Tech [android.nfc.tech.IsoDep, android.nfc.tech.NfcA]
 - 원인
     - 현재 LoggerFactory라는 클래스가 없다. 따라서 해당 앱을 계속 따라하기에는 무리...
 
+모방 대상 앱을 모두 따라하기
+----
+- 원인
+    - 힘들기 때문에 
+
+- 과정
+    - lang3을 추가하여 여러 utils를 받을 수 있었다. 
+    - BitUtils를 받자
+    - LoggingFactory를 받자
+
 
 
 

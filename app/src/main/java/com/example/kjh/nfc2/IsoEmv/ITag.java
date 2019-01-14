@@ -1,4 +1,7 @@
-package com.example.kjh.nfc2;
+package com.example.kjh.nfc2.IsoEmv;
+
+import com.example.kjh.nfc2.Enum.TagTypeEnum;
+import com.example.kjh.nfc2.Enum.TagValueTypeEnum;
 
 
 public interface ITag {

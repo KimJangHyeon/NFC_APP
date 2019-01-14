@@ -3,7 +3,6 @@ package com.example.kjh.nfc2;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
@@ -18,11 +17,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
+import com.example.kjh.nfc2.Enum.CommandEnum;
+import com.example.kjh.nfc2.Parser.EmvParser;
+import com.example.kjh.nfc2.Utils.CommandApdu;
+import com.example.kjh.nfc2.Utils.Provider;
+import com.example.kjh.nfc2.Utils.ResponseUtils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tagDesc2;
 
     private Tag mTag;
+    private Provider mProvider;
 
 
     //Credit Card NFC Reader
@@ -52,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        mProvider = new Provider();
     }
 
     @Override
@@ -105,13 +109,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("ISODEP", "result is null!!");
             }
 
-            if (ResponseUtils.isSucceed(content)) {
-                // Extract PIN try counter
-                byte[] val = TlvUtil.getValue(content, EmvTags.PIN_TRY_COUNTER);
-                if (val != null) {
-                    ret = BytesUtils.byteArrayToInt(val);
-                }
-            }
 
             tagDesc2.setText("Tag Content: " + content);
         }
@@ -227,15 +224,21 @@ public class MainActivity extends AppCompatActivity {
 
     public byte[] isoDepTag(Tag tag) {
         byte[] result;
+        mProvider.getLog().setLength(0);
         IsoDep mIsoDep = IsoDep.get(tag);
+
         if (mIsoDep == null) {
             Log.e("ISODEP", "IsoDep is null");
             return null;
         }
+
+
         try {
             contactLess = true;
             mIsoDep.connect();
-            byte[] aid = mIsoDep.transceive(new CommandApdu(CommandEnum.SELECT, pAid, 0).toBytes());
+            mProvider.setmTagCom(mIsoDep);
+            EmvParser parser = new EmvParser(mProvider, true);
+
             result = mIsoDep.transceive(new CommandApdu(CommandEnum.SELECT, contactLess ? PPSE : PSE, 0).toBytes());
             Log.e("ISODEP RESULT LEN", result.length + "");
             Log.e("ISODEP RESULT", result.toString());

@@ -1,5 +1,7 @@
-package com.example.kjh.nfc2;
+package com.example.kjh.nfc2.Utils;
 
+
+import com.example.kjh.nfc2.Enum.CommandEnum;
 
 public class CommandApdu {
 

@@ -1,7 +1,6 @@
-package com.example.kjh.nfc2;
+package com.example.kjh.nfc2.Utils;
 
-import java.util.Arrays;
-import java.util.logging.Logger;
+import com.example.kjh.nfc2.Enum.SwEnum;
 
 
 /**

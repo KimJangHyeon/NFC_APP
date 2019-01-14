@@ -1,5 +1,7 @@
-package com.example.kjh.nfc2;
+package com.example.kjh.nfc2.Enum;
 
+
+import com.example.kjh.nfc2.Utils.BytesUtils;
 
 /**
  * List of status word (last 2 bytes) in APDU response<br/>
