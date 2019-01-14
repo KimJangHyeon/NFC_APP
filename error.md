@@ -77,3 +77,9 @@ Plugin Error: required plugin “Android Support” is disabled
 - 해결
     - https://stackoverflow.com/questions/37908267/plugin-error-required-plugin-android-support-is-disabled/40055520
 
+
+
+
+Credit-Card<CardNfcAsyncTask Run 분석>
+====
+CardNfcAsyncTask() -> DoInBackground -> onPostExecute ->
