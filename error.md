@@ -15,6 +15,10 @@ null이 들어감
 - https://stackoverflow.com/questions/42963329/attempt-to-invoke-virtual-method-void-android-nfc-tech-mifareclassic-connect
 - 결과
     - 변화 없이 null 출력
+    - Tag before
+        - TAG: Tech [android.nfc.tech.IsoDep, android.nfc.tech.NfcA]
+    - Tag After
+        - TAG: Tech [android.nfc.tech.IsoDep, android.nfc.tech.NfcA]
 
 MifareUltraligh.class에 워닝 로그
 ----
@@ -27,7 +31,28 @@ MifareUltraligh.class에 워닝 로그
     - 다운로드 + IDE 다운로드
 
 - 결과
-    - 
+    - 집에서는 API 27이어서 다운받은 것 변화 없음 
+
+Tech [android.nfc.tech.IsoDep, android.nfc.tech.NfcA]
+-----
+- 원인
+    - 다음과 같은 에러였고  참고 앱이었던 Credit Card NFC Reader도 IsoDep을 이용해 데이터를 받았기 때문에 IsoDep을 이용하여 데이터를 받아 보자. 
+
+- 참고 앱을 이용하여 데이터를 받기 
+    - CommandApdu.class, CommandEnum.enum 가져오기 
+    - PPSE, PSE, contactLess 변수 추가 
+
+- 결과 
+    - 무언가 데이터를 받아오기는 하였다. 
+
+받아온 IsoDep 처리하기
+----
+- 원인
+    - 현재 LoggerFactory라는 클래스가 없다. 따라서 해당 앱을 계속 따라하기에는 무리...
+
+
+
+
 
 
 

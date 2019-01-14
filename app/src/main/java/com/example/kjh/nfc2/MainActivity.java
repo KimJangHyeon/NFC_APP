@@ -34,6 +34,12 @@ public class MainActivity extends AppCompatActivity {
 
     private Tag mTag;
 
+
+    //Credit Card NFC Reader
+    private static final byte[] PPSE = "2PAY.SYS.DDF01".getBytes();
+    private static final byte[] PSE = "1PAY.SYS.DDF01".getBytes();
+    private boolean contactLess;
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
@@ -87,13 +93,25 @@ public class MainActivity extends AppCompatActivity {
         if (mTag != null) {
             byte[] tagId = mTag.getId();
             tagDesc1.setText("TagId: " + toHexString(tagId));
-            tagNum = toHexString(tagId);    //https://stackoverflow.com/questions/42963329/attempt-to-invoke-virtual-method-void-android-nfc-tech-mifareclassic-connect 이 이유로 patchTag추가
+            tagNum = toHexString(tagId);
         }
         if (mTag != null) {
             Log.e("BEFORE PATCHTAG", mTag.toString());
             mTag = patchTag(mTag);
             Log.e("PATCHTAG", mTag.toString());
-            String content = readTag(mTag);
+            //String content = readTag(mTag);
+            byte[] content = isoDepTag(mTag);
+            if (content == null) {
+                Log.e("ISODEP", "result is null!!");
+            }
+
+            if (ResponseUtils.isSucceed(content)) {
+                // Extract PIN try counter
+                byte[] val = TlvUtil.getValue(content, EmvTags.PIN_TRY_COUNTER);
+                if (val != null) {
+                    ret = BytesUtils.byteArrayToInt(val);
+                }
+            }
 
             tagDesc2.setText("Tag Content: " + content);
         }
@@ -102,8 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public Tag patchTag(Tag oTag)
-    {
+    public Tag patchTag(Tag oTag) {
         if (oTag == null)
             return null;
 
@@ -204,6 +221,27 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Error closing tag...", e);
                 }
             }
+        }
+        return null;
+    }
+
+    public byte[] isoDepTag(Tag tag) {
+        byte[] result;
+        IsoDep mIsoDep = IsoDep.get(tag);
+        if (mIsoDep == null) {
+            Log.e("ISODEP", "IsoDep is null");
+            return null;
+        }
+        try {
+            contactLess = true;
+            mIsoDep.connect();
+            byte[] aid = mIsoDep.transceive(new CommandApdu(CommandEnum.SELECT, pAid, 0).toBytes());
+            result = mIsoDep.transceive(new CommandApdu(CommandEnum.SELECT, contactLess ? PPSE : PSE, 0).toBytes());
+            Log.e("ISODEP RESULT LEN", result.length + "");
+            Log.e("ISODEP RESULT", result.toString());
+            return result;
+        } catch(IOException e) {
+            Log.e("ISODEP ERR", e.getMessage());
         }
         return null;
     }
