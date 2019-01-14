@@ -187,7 +187,6 @@ public class MainActivity extends AppCompatActivity {
         return nTag;
     }
     public String readTag(Tag tag) {
-
         MifareUltralight mifare = MifareUltralight.get(tag);
         Log.e("MIFARE", mifare.toString());
         try {
