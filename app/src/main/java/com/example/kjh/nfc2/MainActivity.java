@@ -34,16 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tagDesc1;
     private TextView tagDesc2;
 
-    private Tag mTag;
-    private Provider mProvider;
 
-
-    //Credit Card NFC Reader
-    private static final byte[] PPSE = "2PAY.SYS.DDF01".getBytes();
-    private static final byte[] PSE = "1PAY.SYS.DDF01".getBytes();
-    private boolean contactLess;
-
-    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-        mProvider = new Provider();
     }
 
     @Override
