@@ -6,10 +6,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.nfc.tech.IsoDep;
+import android.util.Log;
 
+import com.example.kjh.nfc2.Common.Constants;
 import com.example.kjh.nfc2.Enum.EmvCardScheme;
 import com.example.kjh.nfc2.Model.EmvCard;
+import com.example.kjh.nfc2.Parser.EmvParser;
+import com.example.kjh.nfc2.Utils.CardNfcUtils;
 import com.example.kjh.nfc2.Utils.Provider;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
 
 public class CardNfcMode {
     public final static String CARD_UNKNOWN = EmvCardScheme.UNKNOWN.toString();
@@ -66,6 +76,15 @@ public class CardNfcMode {
     private Context mContext;
     private NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
+    private CardNfcUtils mCardNfcUtils;
+    private byte[] result;  //test
+    private final byte[] SELECT = {
+            (byte) 0x80, // CLA Class
+            0x04, // INS Instruction
+            0x00, // P1  Parameter 1
+            0x00, // P2  Parameter 2
+            0x10  // LE  maximal number of bytes expected in result
+    };
 
     public CardNfcMode(Activity activity, Context context) {
         this.mActivity = activity;
@@ -75,9 +94,15 @@ public class CardNfcMode {
     public int create() {
         try {
             nfcAdapter = NfcAdapter.getDefaultAdapter(this.mContext);
-            Intent intent = new Intent(this.mContext, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            pendingIntent = PendingIntent.getActivity(this.mContext, 0, intent, 0);
-            return 0;
+            if (nfcAdapter != null) {
+                Intent intent = new Intent(this.mContext, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                pendingIntent = PendingIntent.getActivity(this.mContext, 0, intent, 0);
+                mCardNfcUtils = new CardNfcUtils(this.mActivity);
+                return 0;
+            } else {
+                return 2;
+            }
+
         } catch(Exception e) {
             return 1;
         }
@@ -85,7 +110,7 @@ public class CardNfcMode {
 
     public int pause() {
         if(this.nfcAdapter != null) {
-            this.nfcAdapter.disableForegroundDispatch(this.mActivity);
+            mCardNfcUtils.disableDispatch();
             return 0;
         }
         //nfcAdapter is null
@@ -95,19 +120,87 @@ public class CardNfcMode {
 
     public int resume() {
         if (this.nfcAdapter != null) {
-            this.nfcAdapter.enableForegroundDispatch(this.mActivity, pendingIntent, null, null);
+            mCardNfcUtils.enableDispatch();
             return 0;
         }
         //nfcAdapter is null
         return 1;
     }
 
-    public int setCardData(Intent intent) {
+    public byte[] setCardData(Intent intent) {
         this.mTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        Log.e("TAG", this.mTag.toString());
         //mFromStart = fromCreate
+        try {
+            if (mTag.toString().equals(NFC_A_TAG) || mTag.toString().equals(NFC_B_TAG)) {
+                Log.e("EnterTag", "tag is A or B");
+                IsoDep mIsoDep = IsoDep.get(this.mTag);
+                if (mIsoDep == null) {
+                    //return Constants.IsoDepNull;
+                    return null;
+                }
+                this.mException = false;
+                try {
+                    Log.e("EnterIsoDep", "isodep ");
+                    mIsoDep.connect();
+                    //TEST
+                    return mIsoDep.transceive(this.SELECT);
 
 
+//                    mProvider.setmTagCom(mIsoDep);
+//                    EmvParser parser = new EmvParser(mProvider, true);
+//                    this.mCard = parser.readEmvCard();
+
+                } catch(IOException e){
+                    mException = true;
+                } finally {
+                    IOUtils.closeQuietly(mIsoDep);
+                }
+
+                if (mCard == null) {
+                    //return Constants.UnknownCard;
+                    return null;
+                }
+                if (mException) {
+                    //return Constants.NotRecognize;
+                    return null;
+                }
+                if (StringUtils.isNotBlank(mCard.getCardNumber())) {
+                    Log.e("Enter", "isNotBlank");
+                    mCardNumber = mCard.getCardNumber();
+                    mExpireDate = mCard.getExpireDate();
+                    mCardType = mCard.getType().toString();
+                    if (mCardType.equals(EmvCardScheme.UNKNOWN.toString())){
+                        Log.d("creditCardNfcReader", UNKNOWN_CARD_MESS);
+                    }
+                    return null;
+                    //return Constants.SuccessNfc;
+                } else if (mCard.isNfcLocked()) {
+                    return null;
+                    //return Constants.LockedNfc;
+                }
+                //return Constants.NotDitected;
+                return null;
+            } else {
+                cleanAll();
+                return null;
+                //return Constants.UnknownTag;
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+            //return Constants.NullPointErr;
+        }
     }
+
+    public Tag getTag() {
+        return mTag;
+    }
+
+    public String getmCardNumber() {
+        return mCardNumber;
+    }
+
     private void cleanAll() {
         mCard = null;
         mTag = null;
