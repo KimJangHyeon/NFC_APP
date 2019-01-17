@@ -113,6 +113,7 @@ public class EmvCard extends AbstractData {
     }
 
     public boolean isNfcLocked() {
+        //return false;
         return this.nfcLocked;
     }
 

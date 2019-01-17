@@ -1,5 +1,7 @@
 package com.example.kjh.nfc3.com.pro100svitlo.creditCardNfcReader.parser;
 
+import android.util.Log;
+
 import com.example.kjh.nfc3.com.pro100svitlo.creditCardNfcReader.enums.CommandEnum;
 import com.example.kjh.nfc3.com.pro100svitlo.creditCardNfcReader.enums.EmvCardScheme;
 import com.example.kjh.nfc3.com.pro100svitlo.creditCardNfcReader.enums.SwEnum;
@@ -114,6 +116,7 @@ public class EmvParser {
             data = parseFCIProprietaryTemplate(data);
             if (ResponseUtils.isSucceed(data)) {
                 for (byte[] aid : getAids(data)) {
+                    Log.e("EmvParser<readWithPSE>", aid.toString());
                     ret = extractPublicData(aid, extractApplicationLabel(data));
                     if (ret) {
                         break;
@@ -171,6 +174,7 @@ public class EmvParser {
         byte[] data = selectAID(pAid);
         if (ResponseUtils.isSucceed(data)) {
             ret = parse(data, this.provider);
+            Log.e("EmvParser<extractPubD>", ret+"");
             if (ret) {
                 String aid = BytesUtils.bytesToStringNoSpace(TlvUtil.getValue(data, EmvTags.DEDICATED_FILE_NAME));
                 if (LOGGER.isDebugEnabled()) {
