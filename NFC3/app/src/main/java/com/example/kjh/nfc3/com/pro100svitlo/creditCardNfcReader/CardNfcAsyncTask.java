@@ -97,7 +97,7 @@ public class CardNfcAsyncTask extends AsyncTask<Void, Void, Object> {
             this.mInterface = b.mInterface;
             try {
                 if (this.mTag.toString().equals(NFC_A_TAG) || this.mTag.toString().equals(NFC_B_TAG)) {
-                    execute(new Void[0]);
+                    execute();
                     return;
                 }
                 if (!b.mFromStart) {

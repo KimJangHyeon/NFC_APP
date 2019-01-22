@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements CardNfcAsyncTask.
         this.mIsScanNow = true;
         Log.e("MainActivity", "startNfcReadCard");
         this.mProgressDialog.show();
-    }
+}
 
     public void cardIsReadyToRead() {
         //this.mPutCardContent.setVisibility(8);

@@ -198,7 +198,7 @@ public enum SwEnum {
         for (SwEnum val : values()) {
             if ((val.status.length == 1 && pData[pData.length - 2] == val.status[0]) || (pData[pData.length - 2] == val.status[0] && pData[pData.length - 1] == val.status[1])) {
                 return val;
-            }
+        }
         }
         return null;
     }

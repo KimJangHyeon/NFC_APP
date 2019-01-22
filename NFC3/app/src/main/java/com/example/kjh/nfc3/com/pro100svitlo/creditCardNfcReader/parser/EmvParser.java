@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +41,7 @@ public class EmvParser {
     private EmvCard card = new EmvCard();
     private boolean contactLess;
     private IProvider provider;
+    private static final String utf = "UTF-8";
 
     public EmvParser(IProvider pProvider, boolean pContactLess) {
         this.provider = pProvider;
@@ -47,8 +49,13 @@ public class EmvParser {
     }
 
     public EmvCard readEmvCard() throws CommunicationException {
-        if (!readWithPSE()) {
-            readWithAID();
+        try {
+            if (!readWithPSE()) {
+                Log.e("EmvParser", "<readEmvCard> enter readWithPSE true");
+                readWithAID();
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return this.card;
     }
@@ -106,18 +113,23 @@ public class EmvParser {
         return null;
     }
 
-    protected boolean readWithPSE() throws CommunicationException {
+    protected boolean readWithPSE() throws CommunicationException, UnsupportedEncodingException {
         boolean ret = false;
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Try to read card with Payment System Environment");
         }
         byte[] data = selectPaymentEnvironment();
+        Log.e("EmvParser", "<readWithPSE> after select payment environment : " + new String(data, utf));
         if (ResponseUtils.isSucceed(data)) {
+            Log.e("EmvParser", "<readWithPSE> is success ResponseUtils.isSucceed(data) 1");
             data = parseFCIProprietaryTemplate(data);
+            Log.e("EmvParser", "<readWithPSE> is data paserFCI : " + new String(data, utf));
             if (ResponseUtils.isSucceed(data)) {
+                Log.e("EmvParser", "<readWithPSE> is success ResponseUtils.isSucceed(data) 2");
                 for (byte[] aid : getAids(data)) {
-                    Log.e("EmvParser<readWithPSE>", aid.toString());
+                    Log.e("EmvParser<readWithPSE>", "aid : " + new String(aid, utf));
                     ret = extractPublicData(aid, extractApplicationLabel(data));
+                    ret = true;
                     if (ret) {
                         break;
                     }
@@ -153,6 +165,11 @@ public class EmvParser {
             int length = aidByte.length;
             int i = 0;
             while (i < length) {
+                try {
+                    Log.e("EmvParser", "<readWithAID> " + new String(aidByte[i], utf));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
                 if (!extractPublicData(aidByte[i], type.getName())) {
                     i++;
                 } else {
@@ -172,6 +189,11 @@ public class EmvParser {
     protected boolean extractPublicData(byte[] pAid, String pApplicationLabel) throws CommunicationException {
         boolean ret = false;
         byte[] data = selectAID(pAid);
+        try {
+            Log.e("EmvParser<extractPubD>", "data : " + new String(data, "UTF-16"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         if (ResponseUtils.isSucceed(data)) {
             ret = parse(data, this.provider);
             Log.e("EmvParser<extractPubD>", ret+"");
@@ -185,6 +207,8 @@ public class EmvParser {
                 this.card.setApplicationLabel(pApplicationLabel);
                 this.card.setLeftPinTry(getLeftPinTry());
             }
+        } else {
+            Log.e("EmvParser<extractPubD>", "else");
         }
         return ret;
     }
